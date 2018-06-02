@@ -25,7 +25,7 @@ public class UpdateChecker : MonoBehaviour {
 
     private string FilesPath {
         get {
-            return GetDownloadsPath() + "/";
+            return Application.persistentDataPath + "/"; //GetDownloadsPath() + "/";
         }
     }
 
@@ -98,8 +98,7 @@ public class UpdateChecker : MonoBehaviour {
         DownloadPopup.Instance.message.text = "Fazendo o download da nova versão. Por favor, aguarde...";
         DownloadPopup.Instance.ShowPopup(true);
         DownloadPopup.Instance.buttom.onClick.AddListener(CancelDownload);
-        //https://developer.android.com/reference/android/os/Environment
-        //https://stackoverflow.com/questions/18383055/android-where-are-downloaded-files-saved
+
         //Get changelog from server
         string fileName = Path.GetFileName(filePath);
         FtpDownload.Instance.downloadWithFTP(serverPath + "/" + filePath, FilesPath + fileName, username, password);
@@ -108,14 +107,13 @@ public class UpdateChecker : MonoBehaviour {
             yield return null; 
         }
 
-        MakeVisible(fileName);
-
         if (FtpDownload.Instance.Failed) {
             DownloadPopup.Instance.message.text = "O download falhou. Tente novamente mais tarde ou contate o suporte.";
             DownloadPopup.Instance.buttonText.text = "Fechar";
         } else {
             DownloadPopup.Instance.message.text = "Para instalar a nova versão, vá em Downlaods e execute o arquivo " + fileName;
             DownloadPopup.Instance.buttonText.text = "Ok";
+            AddToAndroidDownloads(fileName);
         }
     }
 
@@ -140,7 +138,7 @@ public class UpdateChecker : MonoBehaviour {
         }
     }
 
-    private void MakeVisible(string fileName) {
+    private void AddToAndroidDownloads(string fileName) {
         try {
 #if UNITY_ANDROID && !UNITY_EDITOR
             AndroidJavaClass classPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");

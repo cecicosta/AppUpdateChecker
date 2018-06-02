@@ -174,7 +174,7 @@ public class FtpDownload : Singleton<FtpDownload> {
 
             int bytesRead = 0;
             byte[] buffer = new byte[2048];
-
+            Debug.Log("Download Finished");
             while (!stop) {
                 bytesRead = reader.Read(buffer, 0, buffer.Length);
 
@@ -185,6 +185,7 @@ public class FtpDownload : Singleton<FtpDownload> {
                 received += bytesRead;
                 progress = (received / 10000.0f) / (downloadFileSize / 10000.0f);
             }
+            Debug.Log("Download Finished");
             fileStream.Close();
             done = true;
         }

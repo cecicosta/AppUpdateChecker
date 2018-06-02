@@ -299,6 +299,7 @@
     <Compile Include="Assets\UpdateChecker\scripts\Communication\FtpDownload.cs" />
     <Compile Include="Assets\UpdateChecker\scripts\Communication\WWWRequestFile.cs" />
     <Compile Include="Assets\UpdateChecker\scripts\UpdateChecker.cs" />
+    <Compile Include="Assets\UpdateChecker\scripts\Utils\SceneCommands.cs" />
     <Compile Include="Assets\UpdateChecker\scripts\Utils\Singleton.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
