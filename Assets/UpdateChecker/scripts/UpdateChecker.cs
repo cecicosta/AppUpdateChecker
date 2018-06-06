@@ -38,6 +38,8 @@ public class UpdateChecker : MonoBehaviour {
         DownloadPopup.Instance.ShowPopup(true);
         DownloadPopup.Instance.buttom.onClick.AddListener(CancelDownload);
 
+        
+
         //Get changelog from server
         FtpDownload.Instance.downloadWithFTP(serverPath + "/"+ changelogFileName, "", username, password);
         while (!FtpDownload.Instance.Done && !FtpDownload.Instance.Failed) {
@@ -57,9 +59,11 @@ public class UpdateChecker : MonoBehaviour {
         string str = System.Text.Encoding.UTF8.GetString(FtpDownload.Instance.Bytes);
         //Parse the first line which must contains the headers and the last line, which is the last version
         logsHistory = new List<string>(System.Text.RegularExpressions.Regex.Split(str, "\r\n|\r|\n"));
+        string[] headers = null;
+        string[] infos = null;
         if (logsHistory.Count > 0) {
-            string[] headers = logsHistory[0].Split(':');
-            string[] infos = logsHistory[logsHistory.Count - 1].Split(':');
+            headers = logsHistory[0].Split(':');
+            infos = logsHistory[logsHistory.Count - 1].Split(':');
             for(int i=0; i<headers.Length && i< infos.Length; i++) {
                 changes.Add(headers[i], infos[i]);
             }
@@ -88,9 +92,11 @@ public class UpdateChecker : MonoBehaviour {
             ChangelogPopup.Instance.ShowPopup(false);
             if (response == 1) {
                 string fileName;
-                changes.TryGetValue("nome", out fileName);
+                changes.TryGetValue(headers[0], out fileName);
                 StartCoroutine(DownloadUpdate(fileName));
             } 
+        } else {
+            CancelDownload();
         }
     }
 
@@ -113,13 +119,50 @@ public class UpdateChecker : MonoBehaviour {
         } else {
             DownloadPopup.Instance.message.text = "Para instalar a nova versão, vá em Downlaods e execute o arquivo " + fileName;
             DownloadPopup.Instance.buttonText.text = "Ok";
+            DownloadPopup.Instance.buttom.onClick.AddListener(() => { RunFile(fileName); });
             AddToAndroidDownloads(fileName);
+            
         }
     }
 
     private void CancelDownload() {
         FtpDownload.Instance.Cancel();
         onFinished.Invoke();
+    }
+
+    private void RunFile(string fileName) {
+        try {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            //Get context
+            AndroidJavaClass classPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+            AndroidJavaObject objActivity = classPlayer.GetStatic<AndroidJavaObject>("currentActivity");
+            AndroidJavaObject context = objActivity.Call<AndroidJavaObject>("getApplicationContext");
+
+            AndroidJavaClass intentObj = new AndroidJavaClass("android.content.Intent");
+            string ACTION_VIEW = intentObj.GetStatic<string>("ACTION_VIEW");
+            int FLAG_ACTIVITY_NEW_TASK = intentObj.GetStatic<int>("FLAG_ACTIVITY_NEW_TASK");
+            int FLAG_GRANT_READ_URI_PERMISSION = intentObj.GetStatic<int>("FLAG_GRANT_READ_URI_PERMISSION");
+            AndroidJavaObject intent = new AndroidJavaObject("android.content.Intent", ACTION_VIEW);
+
+            string packageName = context.Call<string>("getPackageName");
+            string authority = packageName + ".fileprovider";
+
+            AndroidJavaObject fileObj = new AndroidJavaObject("java.io.File", FilesPath + fileName);
+            AndroidJavaClass fileProvider = new AndroidJavaClass("android.support.v4.content.FileProvider");
+            AndroidJavaObject uri = fileProvider.CallStatic<AndroidJavaObject>("getUriForFile", context, authority, fileObj);
+
+            intent.Call<AndroidJavaObject>("setDataAndType", uri, "application/vnd.android.package-archive");
+            intent.Call<AndroidJavaObject>("addFlags", FLAG_ACTIVITY_NEW_TASK);
+            intent.Call<AndroidJavaObject>("addFlags", FLAG_GRANT_READ_URI_PERMISSION);
+
+            AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+            AndroidJavaObject currentActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
+            currentActivity.Call("startActivity", intent);
+#endif
+        } catch (Exception e) {
+            DownloadPopup.Instance.message.text = e.Message;
+            DownloadPopup.Instance.ShowPopup(true);
+        }
     }
 
     private string GetDownloadsPath() {

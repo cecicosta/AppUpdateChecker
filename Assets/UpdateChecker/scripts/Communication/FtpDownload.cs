@@ -6,7 +6,7 @@ using System.IO;
 using System;
 using System.Threading;
 
-public class FtpDownload : Singleton<FtpDownload> {
+public class FtpDownload : UC_Singleton<FtpDownload> {
 
     private bool stop = false;
     private bool failed = false;
@@ -54,6 +54,7 @@ public class FtpDownload : Singleton<FtpDownload> {
         downloadFileSize = RequestFileSize(ftpUrl, userName, password);
         FtpWebRequest request = (FtpWebRequest)WebRequest.Create(new System.Uri(ftpUrl));
         //request.Proxy = null;
+
         request.UsePassive = true;
         request.UseBinary = true;
         request.KeepAlive = true;

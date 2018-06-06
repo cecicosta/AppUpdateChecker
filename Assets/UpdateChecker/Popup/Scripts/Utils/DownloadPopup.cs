@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class DownloadPopup : Singleton<DownloadPopup> {
+public class DownloadPopup : UC_Singleton<DownloadPopup> {
 
     public GameObject container;
     public Text message;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ChangelogPopup : Singleton<ChangelogPopup> {
+public class ChangelogPopup : UC_Singleton<ChangelogPopup> {
 
     public GameObject container;
 

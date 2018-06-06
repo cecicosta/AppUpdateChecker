@@ -4,4 +4,11 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/UpdateChecker/UpdateChecker.unity
+    guid: 4234066a0bcd8894199b8edb29cfd44c
+  - enabled: 1
+    path: Assets/UpdateChecker/CenaInicial.unity
+    guid: a389486a7f601a14696e5eb45be14528
+  m_configObjects: {}
