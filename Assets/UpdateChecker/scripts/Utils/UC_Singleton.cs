@@ -9,9 +9,10 @@
 /// </summary>
 public class UC_Singleton<T> : MonoBehaviour where T : MonoBehaviour {
     private static T _instance;
+    internal static T _Instance{ get{ return _instance; } }
 
     private static object _lock = new object();
-
+    
     public static T Instance {
         get {
             if (applicationIsQuitting) {
@@ -52,6 +53,14 @@ public class UC_Singleton<T> : MonoBehaviour where T : MonoBehaviour {
             }
         }
     }
+    internal static void DestroyInstance() {
+        lock (_lock) {
+            if (_instance != null) {
+                DestroyImmediate(_instance.gameObject);
+                _instance = null;
+            }
+        }
+    }
 
     private static bool applicationIsQuitting = false;
     /// <summary>
@@ -62,7 +71,9 @@ public class UC_Singleton<T> : MonoBehaviour where T : MonoBehaviour {
     ///   even after stopping playing the Application. Really bad!
     /// So, this was made to be sure we're not creating that buggy ghost object.
     /// </summary>
-    public void OnDestroy() {
+    void OnApplicationQuit() {
         applicationIsQuitting = true;
     }
+
+    
 }

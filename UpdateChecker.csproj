@@ -297,7 +297,8 @@
     <Compile Include="Assets\UpdateChecker\Popup\Scripts\Utils\ChangelogPopup.cs" />
     <Compile Include="Assets\UpdateChecker\Popup\Scripts\Utils\DownloadPopup.cs" />
     <Compile Include="Assets\UpdateChecker\scripts\Communication\FtpDownload.cs" />
-    <Compile Include="Assets\UpdateChecker\scripts\Communication\WWWRequestFile.cs" />
+    <Compile Include="Assets\UpdateChecker\scripts\Communication\HttpDownload.cs" />
+    <Compile Include="Assets\UpdateChecker\scripts\Communication\IDownloadClient.cs" />
     <Compile Include="Assets\UpdateChecker\scripts\UpdateChecker.cs" />
     <Compile Include="Assets\UpdateChecker\scripts\Utils\SceneCommands.cs" />
     <Compile Include="Assets\UpdateChecker\scripts\Utils\UC_Singleton.cs" />

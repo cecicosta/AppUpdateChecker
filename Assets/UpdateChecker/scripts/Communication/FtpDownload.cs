@@ -6,65 +6,77 @@ using System.IO;
 using System;
 using System.Threading;
 
-public class FtpDownload : UC_Singleton<FtpDownload> {
+public class FtpDownload : IDownloadClient {
 
     private bool stop = false;
     private bool failed = false;
-    public bool Failed {
+    byte[] data;
+    private Thread t;
+    private float progress;
+    private long downloadFileSize;
+    private NetworkCredential credentials;
+    private string errorMessage;
+    private bool done = false;
+
+
+    public override bool Failed {
         get {
             return failed;
         }
     }
 
-    private bool done = false;
-    public bool Done {
+    public override bool Done {
         get {
             return done;
         }
     }
 
-    byte[] data;
-    private Thread t;
-    private float progress;
-    private long downloadFileSize;
-
-    public byte[] Bytes {
+    public override byte[] Bytes {
         get {
             return data;
         }
     }
 
-    public float Progress {
+    public override float Progress {
         get {
             return progress;
         }
     }
 
-    public long DownloadFileSize {
+    public override string ErrorMessage {
+        get {
+            return errorMessage;
+        }
+    }
+
+    public override long DownloadFileSize {
         get {
             return downloadFileSize;
         }
     }
 
-    public void downloadWithFTP(string ftpUrl, string savePath = "", string userName = "", string password = "") {
+    public override void SetCredentials(string userName = "", string password = "") {
+        credentials = new NetworkCredential(userName, password);
+    }
+
+    public override void Download(string ftpUrl, string savePath = "") {
         done = false;
         failed = false;
         stop = false;
 
-        downloadFileSize = RequestFileSize(ftpUrl, userName, password);
+        downloadFileSize = RequestFileSize(ftpUrl);
         FtpWebRequest request = (FtpWebRequest)WebRequest.Create(new System.Uri(ftpUrl));
         //request.Proxy = null;
 
         request.UsePassive = true;
         request.UseBinary = true;
         request.KeepAlive = true;
-        request.ReadWriteTimeout = 30000;
-        request.Timeout = 30000;
+        request.ReadWriteTimeout = 300000;
+        request.Timeout = 300000;
         
         //If username or password is NOT null then use Credential
-        if (!string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(password)) {
-            request.Credentials = new NetworkCredential(userName, password);
-        }
+        request.Credentials = credentials;
+        
 
         request.Method = WebRequestMethods.Ftp.DownloadFile;
         //If savePath is NOT null, we want to save the file to path
@@ -107,7 +119,7 @@ public class FtpDownload : UC_Singleton<FtpDownload> {
         t.Start();
     }
 
-    internal void Cancel() {
+    public override void Cancel() {
         stop = true;
     }
 
@@ -131,6 +143,7 @@ public class FtpDownload : UC_Singleton<FtpDownload> {
         }
         catch (System.Exception e) {
             Debug.Log("Error to upload file: " + e.Message);
+            errorMessage = e.Message;
             failed = true;
         }
     }
@@ -156,6 +169,7 @@ public class FtpDownload : UC_Singleton<FtpDownload> {
         }
         catch (System.Exception e) {
             Debug.Log("Error to download file" + e.Message);
+            errorMessage = e.Message;
             failed = true;
         }
     }
@@ -176,7 +190,7 @@ public class FtpDownload : UC_Singleton<FtpDownload> {
             int bytesRead = 0;
             byte[] buffer = new byte[2048];
             Debug.Log("Download Finished");
-            while (!stop) {
+            while (!stop && fileStream.CanRead && received < downloadFileSize) {
                 bytesRead = reader.Read(buffer, 0, buffer.Length);
 
                 if (bytesRead == 0)
@@ -192,14 +206,15 @@ public class FtpDownload : UC_Singleton<FtpDownload> {
         }
         catch (System.Exception e) {
             Debug.Log(e.Message);
+            errorMessage = e.Message;
             failed = true;
         }
     }
 
-    long RequestFileSize(string serverPath, string user, string pass) {
+    long RequestFileSize(string serverPath) {
         FtpWebRequest request = (FtpWebRequest)FtpWebRequest.Create(new Uri(serverPath));
         //request.Proxy = null;
-        request.Credentials = new NetworkCredential(user, pass);
+        request.Credentials = credentials;
         request.Method = WebRequestMethods.Ftp.GetFileSize;
         request.ReadWriteTimeout = 30000;
         request.Timeout = 30000;
@@ -208,5 +223,13 @@ public class FtpDownload : UC_Singleton<FtpDownload> {
         long size = response.ContentLength;
         response.Close();
         return size;
+    }
+
+    public new static IDownloadClient CreateNewInstance() {
+        DestroyInstance();
+        if (_Instance == null) {
+            new GameObject("FtpDownloadClient", new Type[] { typeof(FtpDownload) });
+        }
+        return Instance;
     }
 }
